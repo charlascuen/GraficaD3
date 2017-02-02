@@ -14,12 +14,18 @@ module.exports = {
         "border_radius": "Radio de borde",
         "opacity": "Opacidad",
         "title": "Título",
+        "grid": "Rejilla",
         "x_grid": "Rejilla eje x",
         "y_grid": "Rejilla eje y",
         "line_color": "Color de línea",
-        "file": "Archivo",
-        "x_axis": "Datos Eje X",
-        "y_axis": "Datos Eje Y",
+        "file": "Elegir Archivo",
+        "or": "O rellenar la tabla",
+        "x_axis": "Eje X",
+        "y_axis": "Eje Y",
+        "chart_type": "Tipo de Grafico",
         "order_by": "Ordenar Por",
+        "data_rows": "Filas",
+        "data_cols": "Columnas",
+        "key": "Key"
     }
 };

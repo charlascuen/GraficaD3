@@ -1,67 +1,111 @@
 import React from "react";
-import {BarChart, LineChart, Bar, Line, XAxis, YAxis, CartesianGrid, Legend, Tooltip} from "recharts";
+import {PieChart, AreaChart, BarChart, LineChart, Pie, Area, Bar, Line, XAxis, YAxis, CartesianGrid, Legend, Tooltip} from "recharts";
 
-export default{
-    getLineChart: function (state) {
-
-        const Chart = React.createClass({
-            render(){
-                return (
-                /* jshint ignore:start */
-                <LineChart
-                    width={700} height={300}
-                    data={state.chartData}>
-                    <XAxis
-                        dataKey={state.chartXKey}
-                        name={state.chartXKey}/>
-                    <YAxis dataKey={state.chartYKey}
-                        name={state.chartYKey}
-                        label={state.chartYKey}/>
-                    <CartesianGrid
-                        horizontal={state.showYGrid == "checked" ? true : false}
-                        vertical={state.showXGrid == "checked" ? true : false} />
-                    <Line type="monotone"
-                        dataKey={state.chartYKey}
-                        stroke={state.chartLineColor}
-                        strokeDasharray="3 3"/>
-                    <Tooltip active={true}/>
-                    <Legend/>
-                </LineChart>
-                /* jshint ignore:end */
-            );
-            }
-        });
-
-        return Chart;
+let Chart = React.createClass({
+    getInitialState() {
+        
+        return {
+        };
     },
-    getBarChart: function (state) {
-
-        const Chart = React.createClass({
-            render(){
+    
+    render: function() {
+        /* jshint ignore:start */
+        let state = this.props.state;
+        switch (state.type) {
+            case "line":
                 return (
-                /* jshint ignore:start */
-                <BarChart width={700} height={300}
-                    data={state.chartData}>
-                    <XAxis
-                        dataKey={state.chartXKey}
-                        name={state.chartXKey}/>
-                    <YAxis dataKey={state.chartYKey}
-                        name={state.chartYKey}
-                        label={state.chartYKey}/>
-                    <CartesianGrid
-                        horizontal={state.showYGrid == "checked" ? true : false}
-                        vertical={state.showXGrid == "checked" ? true : false} />
-                    <Tooltip/>
-                    <Legend />
-                    <Bar dataKey={state.chartYKey}
-                        fill={state.chartLineColor}
-                        scaleY={1} />
-                </BarChart>
-                /* jshint ignore:end */
-            );
-            }
-        });
+                    <LineChart
+                        width={700} height={300}
+                        data={state.data}>
+                        <XAxis
+                            dataKey={state.x.key}
+                            name={state.x.key}/>
+                        <YAxis dataKey={state.y.key}
+                            name={state.y.key}
+                            label={state.y.key}/>
+                        <CartesianGrid
+                            horizontal={state.y.grid}
+                            vertical={state.x.grid} />
+                        <Line type="monotone"
+                            dataKey={state.y.key}
+                            stroke={state.lineColor}/>
+                        <Tooltip active={true}/>
+                        <Legend/>
+                    </LineChart>
+                );
+            case "area":
+                return (
+                    <AreaChart width={700} height={300}
+                        data={state.data}>
+                        <defs>
+                            <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
+                                <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
+                            </linearGradient>
+                        </defs>
+                        <XAxis
+                            dataKey={state.x.key}
+                            name={state.x.key}/>
+                        <YAxis dataKey={state.y.key}
+                            name={state.y.key}
+                            label={state.y.key}/>
+                        <CartesianGrid
+                            horizontal={state.y.grid}
+                            vertical={state.x.grid} />
+                        <Tooltip />
+                        <Area type="monotone" dataKey={state.y.key} stroke={state.lineColor} fillOpacity={1} fill="url(#colorUv)" />
+                    </AreaChart>
+                );
+            case "bar":
+                return (
+                    <BarChart width={700} height={300}
+                        data={state.data}>
+                        <XAxis
+                            dataKey={state.x.key}
+                            name={state.x.key}/>
+                        <YAxis dataKey={state.y.key}
+                            name={state.y.key}
+                            label={state.y.key}/>
+                        <CartesianGrid
+                            horizontal={state.y.grid}
+                            vertical={state.x.grid} />
+                        <Tooltip/>
+                        <Legend />
+                        <Bar dataKey={state.y.key}
+                            fill={state.lineColor}
+                            scaleY={1} />
+                    </BarChart>
+                );
+            case "pie":
+                return (
+                    <PieChart width={700} height={300}>
+                        <Pie data={state.data} nameKey={state.y.key} valueKey={state.x.key} cx="50%" cy="50%" outerRadius={60} fill="#8884d8" label/>
+                    </PieChart>
+                );
+            default:
+                return (
+                    <LineChart
+                        width={700} height={300}
+                        data={state.data}>
+                        <XAxis
+                            dataKey={state.x.key}
+                            name={state.x.key}/>
+                        <YAxis dataKey={state.y.key}
+                            name={state.y.key}
+                            label={state.y.key}/>
+                        <CartesianGrid
+                            horizontal={state.y.grid}
+                            vertical={state.x.grid} />
+                        <Line type="monotone"
+                            dataKey={state.y.key}
+                            stroke={state.lineColor}/>
+                        <Tooltip active={true}/>
+                        <Legend/>
+                    </LineChart>
+                );
 
-        return Chart;
+        }
+        /* jshint ignore:end */
     }
-};
+});
+module.exports = Chart;
