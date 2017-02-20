@@ -413,19 +413,18 @@ export function GraficaD3(base) {
 					let keys = this.state.keys;
 					let pre = keys[event.target.name];
 					let data = this.state.data;
-					/*if(event.target.value === ""){
-					return;
-					}*/
 					keys[event.target.name] = event.target.value;
-					for (var i = 0; i < data.length; i++) {
+					for (let i = 0; i < data.length; i++) {
 						let value = data[i][pre];
 						data[i][event.target.value] = value;
 						delete data[i][pre];
 					}
 					this.setState({keys: keys, data: data});
+
 				},
 
 				dataChanged(event) {
+					console.log(event.target.name);
 					let pos = event.target.name.split(" ");
 					let row = pos[0];
 					let col = pos[1];
@@ -434,10 +433,10 @@ export function GraficaD3(base) {
 					this.setState({data: data});
 				},
 
-				editButton() {
-					/*if(this.state.editing){
-						this.setState({x: cols[0], y: cols[0]});
-					}*/
+				editButtonClicked() {
+					if(this.state.editing){
+						this.setState({phase: 2});
+					}
 					this.setState({editing: !this.state.editing});
 					this.updateChart();
 				},
@@ -469,7 +468,7 @@ export function GraficaD3(base) {
 							yAxis[i] = "";
 						}
 					} else {
-						yAxis = yAxis.slice(0, number)
+						yAxis = yAxis.slice(0, number);
 					}
 					this.setState({y: yAxis});
 					this.updateChart();
@@ -500,6 +499,7 @@ export function GraficaD3(base) {
 				render() {
 					let state = this.state;
 					let context = this;
+					console.log(state);
 					this.modifyState();
 					return (
 						/* jshint ignore:start */
@@ -536,7 +536,7 @@ export function GraficaD3(base) {
 														{!this.state.isFile &&
 															<div>
 																<Col xs={3}>
-																	<Button onClick={context.editButton} style={{marginTop: '0px'}}>
+																	<Button onClick={context.editButtonClicked} style={{marginTop: '0px'}}>
 																		{this.state.editing ? 'Confirmar' : 'Editar'}
 																	</Button>
 																</Col>
