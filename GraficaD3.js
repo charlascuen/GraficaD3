@@ -1,5 +1,5 @@
 import React from "react";
-import { Form, Button, FormGroup, FormControl, ControlLabel, Col, Grid, Row, Table, Tabs, Tab, Checkbox} from "react-bootstrap";
+import { Form, Button, FormGroup, FormControl, ControlLabel, Col, Grid, Row, Table, Checkbox, Radio} from "react-bootstrap";
 import {LineChart, Line, XAxis, YAxis, CartesianGrid, Legend, Tooltip} from "recharts";
 import Typeahead from 'react-bootstrap-typeahead';
 
@@ -254,7 +254,7 @@ export function GraficaD3(base) {
 			};
 		},
 		getRenderTemplate: function (state) {
-			
+
 			return (
 				/* jshint ignore:start */
 				<Chart state={state}></Chart>
@@ -264,12 +264,16 @@ export function GraficaD3(base) {
 
 		},
 		getConfigTemplate: function (extState) {
-			
+
 			let Config = React.createClass({
+				componentDidMount(){
+					let { clientWidth } = this.refs.chartContainer;
+					this.setState({chartWidth: clientWidth});
+				},
 				getInitialState() {
 					let cols = extState.cols;
 					let rows = extState.rows;
-					
+
 					let data = [];
 					let keys = [];
 					let row = {};
@@ -280,42 +284,43 @@ export function GraficaD3(base) {
 					for (var i = 0; i < rows; i++) {
 						data.push(row);
 					}
-					
+
 					return {
-						tab: 1,
+						phase: 1,
+						editing: false,
 						cols: cols,
 						rows: rows,
 						data: data,
 						keys: keys,
 						file: false,
+						isFile: true,
 						error: false,
 						type: "line",
+						key: 0,
 						lineColor: extState.chartLineColor,
-						x: {
-							key: "",
-							grid: true
-						},
-						y: {
-							key: "",
-							grid: true
-						}
+						x: "",
+						y: [""],
+						gridX: true,
+						gridY: true
 					};
 				},
-				
+
 				modifyState(){
 					base.setState("type", this.state.type);
 					base.setState("lineColor", this.state.lineColor);
 					base.setState("x", this.state.x);
 					base.setState("y", this.state.y);
+					base.setState("gridX", this.state.gridX);
+					base.setState("gridY", this.state.gridY);
 					base.setState("data", this.state.data);
 				},
-				
+
 				colsChanged(event){
 					let pre = this.state.cols;
 					let value = parseInt(event.target.value);
 					let keys = this.state.keys;
 					let data = this.state.data;
-					
+
 					if (value > pre) {
 						for (let o = pre; o < value; o++) {
 							keys.push(o);
@@ -325,9 +330,9 @@ export function GraficaD3(base) {
 								data[i][o] = "";
 							}
 						}
-						
+
 					} else if (value < pre) {
-						
+
 						for (let i = 0; i < data.length; i++) {
 							for (let o = value; o < pre; o++) {
 								delete data[i][keys[o]];
@@ -337,14 +342,14 @@ export function GraficaD3(base) {
 					}
 					this.setState({cols: parseInt(value), data: data, keys: keys});
 				},
-				
+
 				rowsChanged(event){
 					let pre = this.state.rows;
 					let value = parseInt(event.target.value);
-					
+
 					let keys = this.state.keys;
 					let data = this.state.data;
-					
+
 					if (value > pre) {
 						let row = {};
 						for (let i = 0; i < keys.length; i++) {
@@ -358,11 +363,9 @@ export function GraficaD3(base) {
 					}
 					this.setState({rows: parseInt(value), data: data});
 				},
-				
+
 				validateJson(json){
-					console.log("json");
-					console.log(json);
-					
+
 					let data = {};
 					if(json.length === 0){
 						this.setState({error: true});
@@ -374,25 +377,25 @@ export function GraficaD3(base) {
 						return false;
 					}
 					for(let row of json) {
-						
+
 						if(!this.compareKeys(cols, Object.keys(row))){
 							this.setState({error: true, file: false});
 							return false;
 						}
 						cols = Object.keys(row);
 					}
-					this.setState({cols: cols.length, rows: json.length, data: json, keys: cols, file: true});
-					
+					this.setState({cols: cols.length, rows: json.length, data: json, keys: cols, x: cols[0], y: [cols[0]], file: true, phase: 2});
+
 					this.setState({error: false});
 					return true;
 				},
-				
+
 				compareKeys(a, b) {
 					a = a.sort().toString();
 					b = b.sort().toString();
 					return a === b;
 				},
-				
+
 				fileChanged(event){
 					var files = event.target.files;
 					var file = files[0];
@@ -405,13 +408,13 @@ export function GraficaD3(base) {
 					};
 					reader.readAsText(file);
 				},
-				
+
 				keyChanged(event) {
 					let keys = this.state.keys;
 					let pre = keys[event.target.name];
 					let data = this.state.data;
 					/*if(event.target.value === ""){
-						return;
+					return;
 					}*/
 					keys[event.target.name] = event.target.value;
 					for (var i = 0; i < data.length; i++) {
@@ -421,284 +424,295 @@ export function GraficaD3(base) {
 					}
 					this.setState({keys: keys, data: data});
 				},
-				
-				tabChanged(tab) {
-					let xKey = this.state.x.key === "" ? this.state.keys[0] : this.state.x.key;
-					let yKey = this.state.y.key === "" ? this.state.keys[0] : this.state.y.key;
-					this.setState({tab: tab, x: {key: xKey, grid: this.state.x.grid}, y: {key: yKey, grid: this.state.y.grid}});
-					this.updateChart();
-				},
-				
+
 				dataChanged(event) {
 					let pos = event.target.name.split(" ");
 					let row = pos[0];
 					let col = pos[1];
 					let data = this.state.data;
 					data[row][col] = isNaN(parseInt(event.target.value)) ? event.target.value : parseInt(event.target.value);
-					console.log(data[row][col]);
 					this.setState({data: data});
 				},
-				
-				updateChart(){
-					this.setState({type: this.state.type});
+
+				editButton() {
+					/*if(this.state.editing){
+						this.setState({x: cols[0], y: cols[0]});
+					}*/
+					this.setState({editing: !this.state.editing});
+					this.updateChart();
 				},
-				
+
+				updateChart(){
+					this.setState({ key: Math.random() });
+				},
+
+				isFileChanged(event){
+					let isFile = event.target.value === "true" ? true : false;
+					this.setState({isFile: isFile, editing: !isFile});
+				},
+
 				typeChanged(event){
 					this.setState({type: event.target.value});
+					this.updateChart();
 				},
-				
+
 				colorChanged(event){
 					this.setState({lineColor: event.target.value});
 					this.updateChart();
 				},
-				
+
+				yAxisChanged(event){
+					let yAxis = this.state.y;
+					let number =  event.target.value;
+					if(number > yAxis.length){
+						for (var i = yAxis.length; i < number; i++) {
+							yAxis[i] = "";
+						}
+					} else {
+						yAxis = yAxis.slice(0, number)
+					}
+					this.setState({y: yAxis});
+					this.updateChart();
+				},
+
 				xKeyChanged(event){
-					this.setState({x: {key: event.target.value, grid: this.state.x.grid}});
+					this.setState({x: event.target.value});
 					this.updateChart();
 				},
-				
+
 				xGridChanged(event){
-					this.setState({x: {key: this.state.x.key, grid: event.target.checked}});
+					this.setState({gridX: event.target.checked});
 					this.updateChart();
 				},
-				
+
 				yKeyChanged(event){
-					this.setState({y: {key: event.target.value, grid: this.state.y.grid}});
+					let y = this.state.y;
+					y[event.target.name] = event.target.value;
+					this.setState({y: y});
 					this.updateChart();
 				},
-				
+
 				yGridChanged(event){
-					this.setState({y: {key: this.state.y.key, grid: event.target.checked}});
+					this.setState({gridY: event.target.checked});
 					this.updateChart();
 				},
-				
+
 				render() {
 					let state = this.state;
 					let context = this;
 					this.modifyState();
-					//console.log(state);
 					return (
 						/* jshint ignore:start */
-						<Tabs activeKey={state.tab} onSelect={this.tabChanged} id="charts-config-tab">
-							<Tab eventKey={1} title="Datos">
-								<Grid>
-									<Row style={{marginLeft: "10px", marginRight: "10px"}}>
-										<Col xs={4} style={{border: "1px solid rgb(204, 204, 204)", paddingTop: "10px"}}>
-											<Form horizontal={true}>
-												<FormGroup>
-													<Col componentClass={ControlLabel} xs={4}>
-														{Dali.i18n.t("GraficaD3.data_cols")}
-													</Col>
-													<Col xs={6} xsOffset={2}>
-														<FormControl type="number" name="cols" value={this.state.cols} onChange={this.colsChanged}/>
-													</Col>
-												</FormGroup>
-												
-												<FormGroup>
-													<Col componentClass={ControlLabel} xs={4}>
-														{Dali.i18n.t("GraficaD3.data_rows")}
-													</Col>
-													<Col xs={6} xsOffset={2}>
-														<FormControl type="number" name="rows" value={this.state.rows} onChange={this.rowsChanged}/>
-													</Col>
-												</FormGroup>
-
-											</Form>						
-										</Col>
-										<Col xs={7} xsOffset={1} style={{border: "1px solid rgb(204, 204, 204)", padding: "10px"}}>
-											<Form horizontal={true}>
-												<FormGroup>
-													<Col componentClass={ControlLabel} sm={3}>
-														{Dali.i18n.t("GraficaD3.file")}
-													</Col>
-													<Col sm={9}>
-														<FormControl
-															type="file"
-															onChange={this.fileChanged}	/>
-													</Col>
-
-												</FormGroup>
-												<FormGroup>
-													<Col componentClass={ControlLabel} xs={3}>
-														<FormControl.Static>
-															{Dali.i18n.t("GraficaD3.or")}
-														</FormControl.Static>
-													</Col>
-													
-												</FormGroup>
-												<Table bordered condensed hover>
-													<thead>
-														<tr>
-															{Array.apply(0, Array(state.cols)).map(function (x, i) {
-				    											return(
-																	<th key={i + 1}>
-																		<FormControl type="text" name={i} value={state.keys[i]} onChange={context.keyChanged}/>
-																	</th>
-																);
-															})}
-														</tr>
-													</thead>
-													<tbody>
-														{Array.apply(0, Array(state.rows)).map(function (x, i) {
-															
-															return(
-																<tr key={i + 1}>
-																
-																{Array.apply(0, Array(state.cols)).map(function (x, o) {
-					    											return(
-																		<td key={o + 1}>
-																			<FormControl type="text" name={i + " " + state.keys[o]} value={state.data[i][state.keys[o]]} onChange={context.dataChanged}/>
-																		</td>
-																	);
-																})}
-																</tr>
-															);
-														})}
-													</tbody>
-												</Table>
-											</Form>		
-										</Col>
-									</Row>
-									
-									<Row>
-										
-									</Row>
-								</Grid>
-							</Tab>
-							<Tab eventKey={2} title="Gráfica">
-								<Grid>
-									<Row style={{marginLeft: "10px", marginRight: "10px"}}>
-										<Col xs={6} style={{border: "1px solid rgb(204, 204, 204)", paddingTop: "10px"}}>
-											<Form horizontal={true}>
-												<FormGroup>
-													<Col componentClass={ControlLabel} xs={4}>
-														{Dali.i18n.t("GraficaD3.chart_type")}
-													</Col>
-													<Col xs={6} xsOffset={2}>
-														<FormControl componentClass="select" placeholder="select" onChange={this.typeChanged}>
-															<option value="line">Línea</option>
-															<option value="area">Área</option>
-															<option value="bar">Barras</option>
-															<option value="pie">Tarta</option>
-														</FormControl>
-													</Col>
-												</FormGroup>
-												<FormGroup>
-													<Col componentClass={ControlLabel} xs={4}>
-														{"Color"}
-													</Col>
-													<Col xs={6} xsOffset={2}>
-														<FormControl type="color" name="color" value={this.state.lineColor} onChange={this.colorChanged}/>
-													</Col>
-												</FormGroup>
-											</Form>						
-										</Col>
-										<Col xs={5} xsOffset={1} style={{border: "1px solid rgb(204, 204, 204)", padding: "10px"}}>
-											<Form horizontal={true}>
-												<FormGroup>
-													<Col componentClass={ControlLabel} xs={2}>
-														<FormControl.Static>
-															{Dali.i18n.t("GraficaD3.x_axis")}
-														</FormControl.Static>
-													</Col>
-													
-												</FormGroup>
-												<FormGroup>
-													<Col componentClass={ControlLabel} xs={4}>
-														{Dali.i18n.t("GraficaD3.key")}
-													</Col>
-													<Col xs={7} xsOffset={1}>
-														<FormControl componentClass="select" placeholder="select" value={state.x.key} onChange={this.xKeyChanged}>
-															{state.keys.map(function (x, i) {
-				    											return(
-																	<option key={i + 1} value={x}>{x}</option>
-																);
-															})}
-														</FormControl>
-													</Col>
-												</FormGroup>
-												<FormGroup>
-													<Col componentClass={ControlLabel} xs={4}>
-														{Dali.i18n.t("GraficaD3.grid")}
-													</Col>
-													<Col xs={7} xsOffset={1}>
-														<Checkbox checked={state.x.grid} onChange={this.xGridChanged}></Checkbox>
-													</Col>
-												</FormGroup>
-												<FormGroup>
-													<Col componentClass={ControlLabel} xs={2}>
-														<FormControl.Static>
-															{Dali.i18n.t("GraficaD3.y_axis")}
-														</FormControl.Static>
-													</Col>
-													
-												</FormGroup>
-												<FormGroup>
-													<Col componentClass={ControlLabel} xs={4}>
-														{Dali.i18n.t("GraficaD3.key")}
-													</Col>
-													<Col xs={7} xsOffset={1}>
-														<FormControl componentClass="select" placeholder="select" value={state.y.key} onChange={this.yKeyChanged}>
-															{state.keys.map(function (x, i) {
-				    											return(
-																	<option key={i + 1} value={x}>{x}</option>
-																);
-															})}
-														</FormControl>
-													</Col>
-												</FormGroup>
-												<FormGroup>
-													<Col componentClass={ControlLabel} xs={4}>
-														{Dali.i18n.t("GraficaD3.grid")}
-													</Col>
-													<Col xs={7} xsOffset={1}>
-														<Checkbox checked={state.y.grid} onChange={this.yGridChanged}></Checkbox>
-													</Col>
-												</FormGroup>
-											</Form>
-										</Col>
-									</Row>
-									
+						<Grid>
+							<Row style={{marginLeft: "10px", marginRight: "10px"}}>
+								<Col xs={5} style={{paddingTop: "10px"}}>
 									<Row>
 										<Col xs={12}>
-											<Chart state={state}></Chart>
-										</Col>
-										
-									</Row>
-								</Grid>							
-							</Tab>
-						</Tabs>
-						
-						
-						/* jshint ignore:end */
-					);
-				}
-			});
-				
-			return (
-				/* jshint ignore:start */
-				<Config></Config>
-				/* jshint ignore:end */
-			);
-		},
-		fileChanged: function (event) {
+											<h2>Orígen de los datos</h2>
+											<Form horizontal={true}>
+												<FormGroup>
+													<input type="radio" value="true" onChange={this.isFileChanged} checked={this.state.isFile} style={{float: 'left', marginRight: '4px'}} />
+													<FormControl type="file" onChange={this.fileChanged} />
+													<input type="radio" value="false" onChange={this.isFileChanged} checked={!this.state.isFile} style={{float: 'left', marginRight: '4px'}} /> Rellena una tabla
+													</FormGroup>
+													<Row>
+														{this.state.editing && !this.state.isFile &&
+															<div>
+																<Col componentClass={ControlLabel} xs={2}>
+																	{Dali.i18n.t("GraficaD3.data_cols")}
+																</Col>
+																<Col xs={3}>
+																	<FormControl type="number" name="cols" value={this.state.cols} onChange={this.colsChanged}/>
+																</Col>
 
-			var files = event.target.files;
-			var file = files[0];
-			var reader = new FileReader();
-			reader.onload = function() {
-				base.setState( "chartData", JSON.parse(this.result) );
-			};
-			reader.readAsText(file);
-		},
-		chartTypeChange: function (elements) {
-			console.log(elements);
-			base.setState( "chartType", elements[0].id );
-		},
-		handleToolbar: function (name, value) {
+																<Col componentClass={ControlLabel} xs={1}>
+																	{Dali.i18n.t("GraficaD3.data_rows")}
+																</Col>
+																<Col xs={3}>
+																	<FormControl type="number" name="rows" value={this.state.rows} onChange={this.rowsChanged}/>
+																</Col>
+															</div>
+														}
+														{!this.state.isFile &&
+															<div>
+																<Col xs={3}>
+																	<Button onClick={context.editButton} style={{marginTop: '0px'}}>
+																		{this.state.editing ? 'Confirmar' : 'Editar'}
+																	</Button>
+																</Col>
+															</div>
+														}
+													</Row>
+													{this.state.editing &&
+														<div style={{marginTop: '10px'}}>
+															<table className="table bordered hover" >
+																<thead>
+																	<tr>
+																		{Array.apply(0, Array(state.cols)).map(function (x, i) {
+																			return(
+																				<th key={i + 1}>
+																					<FormControl type="text" name={i} value={state.keys[i]} style={{margin: '0px'}} onChange={context.keyChanged}/>
+																				</th>
+																			);
+																		})}
+																	</tr>
+																</thead>
+																<tbody>
 
-			base.setState(name, value);
-		}
+																	{Array.apply(0, Array(state.rows)).map(function (x, i) {
 
-	};
-}
+																		return(
+																			<tr key={i + 1}>
+
+																				{Array.apply(0, Array(state.cols)).map(function (x, o) {
+																					return(
+																						<td key={o + 1}>
+																							<FormControl type="text" name={i + " " + state.keys[o]} value={state.data[i][state.keys[o]]} onChange={context.dataChanged}/>
+
+																						</td>
+																					);
+																				})}
+																			</tr>
+																		);
+																	})}
+																</tbody>
+															</table>
+														</div>
+													}
+												</Form>
+											</Col>
+											{this.state.phase > 1 &&
+												<Col xs={12}>
+													<h2>Opciones del gráfico</h2>
+													<Form horizontal={true}>
+														<FormGroup>
+															<Col componentClass={ControlLabel} xs={4}>
+																{Dali.i18n.t("GraficaD3.chart_type")}
+															</Col>
+															<Col xs={6} xsOffset={2}>
+																<FormControl componentClass="select" placeholder="select" onChange={this.typeChanged}>
+																	<option value="line">Línea</option>
+																	<option value="area">Área</option>
+																	<option value="bar">Barras</option>
+																	<option value="pie">Tarta</option>
+																</FormControl>
+															</Col>
+														</FormGroup>
+														<FormGroup>
+															<Col componentClass={ControlLabel} xs={4}>
+																{"Color"}
+															</Col>
+															<Col xs={6} xsOffset={2}>
+																<FormControl type="color" name="color" value={this.state.lineColor} onChange={this.colorChanged}/>
+															</Col>
+														</FormGroup>
+													</Form>
+
+													<Form horizontal={true}>
+														<FormGroup>
+															<Col componentClass={ControlLabel} xs={4}>
+																<FormControl.Static>
+																	{'Eje Horizontal'}
+																</FormControl.Static>
+															</Col>
+															<Col xs={8}>
+																<FormControl componentClass="select" placeholder="select" value={state.x} onChange={this.xKeyChanged}>
+																	{state.keys.map(function (x, i) {
+																		return(
+																			<option key={i + 1} value={x}>{x}</option>
+																		);
+																	})}
+																</FormControl>
+															</Col>
+														</FormGroup>
+														<FormGroup>
+															<Col componentClass={ControlLabel} xs={4}>
+																<FormControl.Static>
+																	{'Ejes Verticales'}
+																</FormControl.Static>
+															</Col>
+															<Col xs={8}>
+																<FormControl type="number" value={this.state.y.length} onChange={this.yAxisChanged}/>
+															</Col>
+
+														</FormGroup>
+
+														{state.y.map(function (y, i) {
+															return(
+																<div key={i + 1}>
+
+																	<FormGroup>
+																		<Col componentClass={ControlLabel} xs={4}>
+																			{'Eje ' + i}
+																		</Col>
+																		<Col xs={7} xsOffset={1}>
+																			<FormControl componentClass="select" placeholder="select" name={i} value={y} onChange={context.yKeyChanged}>
+																				{state.keys.map(function (x, i) {
+																					return(
+																						<option key={i + 1} value={x}>{x}</option>
+																					);
+																				})}
+																			</FormControl>
+																		</Col>
+																	</FormGroup>
+																</div>
+															);
+														})}
+														<FormGroup>
+															<Col componentClass={ControlLabel} xs={4}>
+																{'Ver rejilla'}
+															</Col>
+															<Col xs={4}>
+																<Checkbox checked={state.gridX} onChange={this.xGridChanged}></Checkbox>
+																{'Vertical'}
+															</Col>
+															<Col xs={4}>
+																<Checkbox checked={state.gridY} onChange={context.yGridChanged}></Checkbox>
+																{'Horizontal'}
+															</Col>
+														</FormGroup>
+													</Form>
+												</Col>
+											}
+										</Row>
+									</Col>
+									<div className="col-xs-7" ref="chartContainer" style={{padding: '0px'}}>
+										{this.state.phase > 1 &&
+											<Chart state={state} key={this.state.key}></Chart>
+										}
+									</div>
+								</Row>
+
+							</Grid>
+
+
+							/* jshint ignore:end */
+						);
+					}
+				});
+
+				return (
+					/* jshint ignore:start */
+					<Config></Config>
+					/* jshint ignore:end */
+				);
+			},
+			fileChanged: function (event) {
+
+				var files = event.target.files;
+				var file = files[0];
+				var reader = new FileReader();
+				reader.onload = function() {
+					base.setState( "chartData", JSON.parse(this.result) );
+				};
+				reader.readAsText(file);
+			},
+			chartTypeChange: function (elements) {
+				base.setState( "chartType", elements[0].id );
+			},
+			handleToolbar: function (name, value) {
+				base.setState(name, value);
+			}
+
+		};
+	}
