@@ -39,10 +39,15 @@ let Chart = React.createClass({
 				<AreaChart width={state.chartWidth || 700} height={300}
 					data={state.data}>
 					<defs>
-						<linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
-							<stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
-							<stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
-						</linearGradient>
+						{state.y.map(function (y, o) {
+							return(
+
+								<linearGradient id={"colorUv" + o} x1="0" y1="0" x2="0" y2="1">
+									<stop offset="5%" stopColor={y.color} stopOpacity={0.8}/>
+									<stop offset="95%" stopColor={y.color} stopOpacity={0}/>
+								</linearGradient>
+							);
+						})}
 					</defs>
 					<XAxis dataKey={state.x} name={state.x}/>
 					<YAxis/>
@@ -50,7 +55,7 @@ let Chart = React.createClass({
 					<Tooltip />
 					{state.y.map(function (y, o) {
 						return(
-							<Area key={o + 1} type="monotone" dataKey={y.key} stroke={y.color} fillOpacity={1} fill="url(#colorUv)"/>
+							<Area key={o + 1} type="monotone" dataKey={y.key} stroke={y.color} fillOpacity={1} fill={"url(#colorUv" + o + ")"}/>
 						);
 					})}
 				</AreaChart>

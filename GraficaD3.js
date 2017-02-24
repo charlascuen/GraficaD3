@@ -351,7 +351,7 @@ export function GraficaD3(base) {
 						let row = data[o];
 						for (let i = 0; i < keys.length; i++) {
 							let key = nKeys[i];
-							data[o][keys[i]] = isNaN(data[o][keys[i]]) || typeof(data[o][keys[i]]) === "boolean" ? data[o][keys[i]] : parseInt(data[o][keys[i]]);
+							data[o][keys[i]] = isNaN(data[o][keys[i]]) || typeof(data[o][keys[i]]) === "boolean"  || data[o][keys[i]] === "" || data[o][keys[i]] === null ? data[o][keys[i]] : parseInt(data[o][keys[i]]);
 							if(key.notNumber){
 								nKeys[i].notNumber = isNaN(row[key.value]) || typeof(row[key.value]) === "boolean";
 							}
@@ -416,7 +416,7 @@ export function GraficaD3(base) {
 					let row = pos[0];
 					let col = pos[1];
 					let data = this.state.data;
-					data[row][col] = isNaN(event.target.value) ? event.target.value : parseInt(event.target.value);
+					data[row][col] = isNaN(event.target.value) || event.target.value === "" || event.target.value === null ? event.target.value : parseInt(event.target.value);
 					this.setState({data: data});
 					this.validateData();
 				},
@@ -495,8 +495,8 @@ export function GraficaD3(base) {
 					if(number > rings.length){
 						for (var i = rings.length; i < number; i++) {
 							rings[i] = {
-								name: "",
-								value: "",
+								name: this.state.keys[0],
+								value: this.state.valueKeys[0],
 								color: extState.chartLineColor
 							};
 						}
@@ -578,6 +578,15 @@ export function GraficaD3(base) {
 												</FormGroup>
 												{this.state.editing &&
 													<div style={{marginTop: '10px'}}>
+														<div style={{display: 'table', tableLayout: 'fixed', width: '100%'}}>
+															{Array.apply(0, Array(state.cols)).map(function (x, i) {
+																return(
+																	<FormControl.Static key={i + 1} style={{display: 'table-cell', padding: '8px', textAlign: 'center'}}>
+																		{'ID Columna'}
+																	</FormControl.Static>
+																);
+															})}
+														</div>
 														<table className="table bordered hover" >
 															<thead>
 																<tr>
@@ -590,7 +599,7 @@ export function GraficaD3(base) {
 																	})}
 																</tr>
 															</thead>
-															<tbody>
+															<tbody style={{backgroundColor: '#f2f2f2'}}>
 
 																{Array.apply(0, Array(state.rows)).map(function (x, i) {
 
