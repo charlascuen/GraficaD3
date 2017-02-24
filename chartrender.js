@@ -20,16 +20,14 @@ let Chart = React.createClass({
 			case "line":
 			return (
 				<LineChart
-					width={state.chartWidth} height={300}
+					width={state.chartWidth || 700 || 700} height={300}
 					data={state.data}>
 					<XAxis dataKey={state.x} name={state.x}/>
 					<YAxis/>
 					<CartesianGrid horizontal={state.gridX} vertical={state.gridY} />
 					{state.y.map(function (y, o) {
 						return(
-							<Line key={o + 1} type="monotone"
-								dataKey={y}
-								stroke={state.lineColor}/>
+							<Line key={o + 1} type="monotone" dataKey={y.key} stroke={y.color}/>
 						);
 					})}
 					<Tooltip active={true}/>
@@ -38,7 +36,7 @@ let Chart = React.createClass({
 			);
 			case "area":
 			return (
-				<AreaChart width={700} height={300}
+				<AreaChart width={state.chartWidth || 700} height={300}
 					data={state.data}>
 					<defs>
 						<linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
@@ -52,14 +50,14 @@ let Chart = React.createClass({
 					<Tooltip />
 					{state.y.map(function (y, o) {
 						return(
-							<Area key={o + 1} type="monotone" dataKey={y} stroke={state.lineColor} fillOpacity={1} fill="url(#colorUv)" />
+							<Area key={o + 1} type="monotone" dataKey={y.key} stroke={y.color} fillOpacity={1} fill="url(#colorUv)"/>
 						);
 					})}
 				</AreaChart>
 			);
 			case "bar":
 			return (
-				<BarChart width={700} height={300}
+				<BarChart width={state.chartWidth || 700} height={300}
 					data={state.data}>
 					<XAxis dataKey={state.x} name={state.x}/>
 					<YAxis/>
@@ -68,40 +66,52 @@ let Chart = React.createClass({
 					<Legend />
 					{state.y.map(function (y, o) {
 						return(
-							<Bar key={o + 1} dataKey={y} fill={state.lineColor} scaleY={1} />
+							<Bar key={o + 1} dataKey={y.color} fill={y.color} scaleY={1} />
 						);
 					})}
 				</BarChart>
 			);
 			case "pie":
-			let data = [];
-			for (let row of state.data) {
-				let value = {};
-				value.name = row[state.x];
-				value.value = row[state.y[0]];
-				data.push(value);
+			let rings = [];
+			for (let ring of state.rings) {
+				let newRing = {};
+				let data = [];
+				for (let row of state.data) {
+					let value = {};
+					value.name = row[ring.name];
+					value.value = row[ring.value];
+					data.push(value);
+				}
+				newRing.data = data;
+				newRing.color = ring.color;
+				rings.push(newRing);
 			}
+
 			return (
-				<PieChart width={700} height={300}>
+				<PieChart width={state.chartWidth || 700} height={300}>
 					<Tooltip/>
-					<Pie data={data} cx="50%" cy="50%" outerRadius={60} fill="#8884d8" label/>
+					{rings.map(function (ring, o) {
+						return(
+							<Pie key={o + 1} data={ring.data} cx="50%" cy="50%" innerRadius={o*50} outerRadius={(o + 1)*50 - 10} fill={ring.color} label/>
+						);
+					})}
 				</PieChart>
 			);
 			default:
 			return (
 				<LineChart
-					width={700} height={300}
+					width={state.chartWidth || 700} height={300}
 					data={state.data}>
 					<XAxis dataKey={state.x} name={state.x}/>
 					<YAxis/>
 					<CartesianGrid
 						horizontal={true}
-						vertical={state.x.grid} />
+						vertical={state.xGrid} />
 					{state.y.map(function (y, o) {
 						return(
 							<Line key={o + 1} type="monotone"
-								dataKey={y}
-								stroke={state.lineColor}/>
+								dataKey={y.key}
+								stroke={y.color}/>
 						);
 					})}
 					<Tooltip active={true}/>

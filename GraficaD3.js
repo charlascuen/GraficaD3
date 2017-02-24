@@ -150,91 +150,6 @@ export function GraficaD3(base) {
 									step: 0.01
 								}
 							}
-						},
-						chart: {
-							icon: "rate_review",
-							__name: Dali.i18n.t("GraficaD3.PluginName"),
-							order: [
-								"chartTitle",
-								"chartType",
-								"chartMargings",
-								"showXGrid",
-								"showYGrid",
-								"chartLineColor"
-							],
-							accordions: {
-								chartMargings: {
-									__name: Dali.i18n.t("GraficaD3.margin"),
-									buttons: {
-										left: {
-											__name: Dali.i18n.t("GraficaD3.left"),
-											type: "number",
-											value: "0px",
-											min: 0,
-											max: 500,
-											units: "px"
-										},
-										right: {
-											__name: Dali.i18n.t("GraficaD3.right"),
-											type: "number",
-											value: "0px",
-											min: 0,
-											max: 500,
-											units: "px"
-										},
-										top: {
-											__name: Dali.i18n.t("GraficaD3.top"),
-											type: "number",
-											value: "0px",
-											min: 0,
-											max: 500,
-											units: "px"
-										},
-										bottom: {
-											__name: Dali.i18n.t("GraficaD3.bottom"),
-											type: "number",
-											value: "0px",
-											min: 0,
-											max: 500,
-											units: "px"
-										}
-									},
-								}
-							},
-							buttons: {
-								chartTitle: {
-									__name: Dali.i18n.t("GraficaD3.title"),
-									type: "text",
-									autoManaged: false,
-									value: this.getInitialState().chartTitle
-								},
-								chartType: {
-									__name: Dali.i18n.t("GraficaD3.title"),
-									type: "select",
-									autoManaged: false,
-									value: "solid",
-									options: ["line", "area", "bar", "pie"]
-								},
-								showXGrid: {
-									__name: Dali.i18n.t("GraficaD3.x_grid"),
-									type: "checkbox",
-									autoManaged: false,
-									value: this.getInitialState().showXGrid
-								},
-								showYGrid: {
-									__name: Dali.i18n.t("GraficaD3.y_grid"),
-									type: "checkbox",
-									autoManaged: false,
-									value: this.getInitialState().showYGrid
-								},
-								chartLineColor: {
-									__name: Dali.i18n.t("GraficaD3.line_color"),
-									type: "color",
-									autoManaged: false,
-									value: this.getInitialState().chartLineColor
-								},
-
-							}
 						}
 					}
 				}
@@ -287,31 +202,39 @@ export function GraficaD3(base) {
 
 					return {
 						phase: 1,
-						editing: false,
+						editing: true,
 						cols: cols,
 						rows: rows,
 						data: data,
 						keys: keys,
+						valueKeys: keys,
 						file: false,
 						isFile: true,
 						error: false,
 						type: "line",
 						key: 0,
-						lineColor: extState.chartLineColor,
 						x: "",
-						y: [""],
+						y: [{
+							key: "",
+							color: extState.chartLineColor
+						}],
 						gridX: true,
-						gridY: true
+						gridY: true,
+						rings: [{
+							name: "",
+							value: "",
+							color: extState.chartLineColor
+						}]
 					};
 				},
 
 				modifyState(){
 					base.setState("type", this.state.type);
-					base.setState("lineColor", this.state.lineColor);
 					base.setState("x", this.state.x);
 					base.setState("y", this.state.y);
 					base.setState("gridX", this.state.gridX);
 					base.setState("gridY", this.state.gridY);
+					base.setState("rings", this.state.rings);
 					base.setState("data", this.state.data);
 				},
 
@@ -364,6 +287,29 @@ export function GraficaD3(base) {
 					this.setState({rows: parseInt(value), data: data});
 				},
 
+				csvToJSON(csv){
+
+					let lines = csv.split("\n");
+
+					let result = [];
+
+					let headers = lines[0].split(",");
+
+					for(var i = 1; i < lines.length; i++){
+
+						let obj = {};
+						let currentline = lines[i].split(",");
+
+						for (let j = 0; j < headers.length; j++) {
+							obj[headers[j]] = currentline[j];
+						}
+						result.push(obj);
+					}
+
+					return result; //JavaScript object
+					//return JSON.stringify(result); //JSON
+				},
+
 				validateJson(json){
 
 					let data = {};
@@ -384,10 +330,43 @@ export function GraficaD3(base) {
 						}
 						cols = Object.keys(row);
 					}
-					this.setState({cols: cols.length, rows: json.length, data: json, keys: cols, x: cols[0], y: [cols[0]], file: true, phase: 2});
+					this.setState({cols: cols.length, rows: json.length, data: json, keys: cols, x: cols[0], file: true});
 
 					this.setState({error: false});
 					return true;
+				},
+
+				validateData() {
+					let data = this.state.data;
+					let keys = this.state.keys;
+					let nKeys = [];
+					for (let i = 0; i < keys.length; i++) {
+						let value = keys[i];
+						nKeys[i] = {};
+						nKeys[i].value = value;
+						nKeys[i].notNumber = true;
+					}
+
+					for (let o = 0; o < data.length; o++) {
+						let row = data[o];
+						for (let i = 0; i < keys.length; i++) {
+							let key = nKeys[i];
+							data[o][keys[i]] = isNaN(data[o][keys[i]]) || typeof(data[o][keys[i]]) === "boolean" ? data[o][keys[i]] : parseInt(data[o][keys[i]]);
+							if(key.notNumber){
+								nKeys[i].notNumber = isNaN(row[key.value]) || typeof(row[key.value]) === "boolean";
+							}
+						}
+					}
+
+					let valueKeys = [];
+					for (let key of nKeys) {
+						if(!key.notNumber){
+							valueKeys.push(key.value);
+						}
+					}
+					console.log(valueKeys);
+					this.setState({valueKeys: valueKeys, y: [{key: valueKeys[0], color: extState.chartLineColor}], rings: [{name: keys[0], value: valueKeys[0], color: extState.chartLineColor}]});
+					this.updateChart();
 				},
 
 				compareKeys(a, b) {
@@ -399,10 +378,18 @@ export function GraficaD3(base) {
 				fileChanged(event){
 					var files = event.target.files;
 					var file = files[0];
+					console.log(file);
 					var reader = new FileReader();
 					let context = this;
 					reader.onload = function() {
-						if(context.validateJson(JSON.parse(this.result))){
+						let data = this.result;
+						if(file.name.split('.').pop() === "csv"){
+							data = context.csvToJSON(data);
+						} else if(file.name.split('.').pop() === "json"){
+							data = JSON.parse(data);
+						}
+						if(context.validateJson(data)){
+							context.validateData();
 							base.setState("chartData", JSON.parse(this.result));
 						}
 					};
@@ -429,8 +416,9 @@ export function GraficaD3(base) {
 					let row = pos[0];
 					let col = pos[1];
 					let data = this.state.data;
-					data[row][col] = isNaN(parseInt(event.target.value)) ? event.target.value : parseInt(event.target.value);
+					data[row][col] = isNaN(event.target.value) ? event.target.value : parseInt(event.target.value);
 					this.setState({data: data});
+					this.validateData();
 				},
 
 				editButtonClicked() {
@@ -456,7 +444,9 @@ export function GraficaD3(base) {
 				},
 
 				colorChanged(event){
-					this.setState({lineColor: event.target.value});
+					let y = this.state.y;
+					y[event.target.name].color = event.target.value;
+					this.setState({y: y});
 					this.updateChart();
 				},
 
@@ -465,7 +455,10 @@ export function GraficaD3(base) {
 					let number =  event.target.value;
 					if(number > yAxis.length){
 						for (var i = yAxis.length; i < number; i++) {
-							yAxis[i] = "";
+							yAxis[i] = {
+								key: "",
+								color: extState.chartLineColor
+							};
 						}
 					} else {
 						yAxis = yAxis.slice(0, number);
@@ -486,13 +479,52 @@ export function GraficaD3(base) {
 
 				yKeyChanged(event){
 					let y = this.state.y;
-					y[event.target.name] = event.target.value;
+					y[event.target.name].key = event.target.value;
 					this.setState({y: y});
 					this.updateChart();
 				},
 
 				yGridChanged(event){
 					this.setState({gridY: event.target.checked});
+					this.updateChart();
+				},
+
+				ringsNumberChanged(event){
+					let rings = this.state.rings;
+					let number =  event.target.value;
+					if(number > rings.length){
+						for (var i = rings.length; i < number; i++) {
+							rings[i] = {
+								name: "",
+								value: "",
+								color: extState.chartLineColor
+							};
+						}
+					} else {
+						rings = rings.slice(0, number);
+					}
+					this.setState({rings: rings});
+					this.updateChart();
+				},
+
+				ringNameChanged(event){
+					let rings = this.state.rings;
+					rings[event.target.name].name = event.target.value;
+					this.setState({rings: rings});
+					this.updateChart();
+				},
+
+				ringValueChanged(event){
+					let rings = this.state.rings;
+					rings[event.target.name].value = event.target.value;
+					this.setState({rings: rings});
+					this.updateChart();
+				},
+
+				ringColorChanged(event){
+					let rings = this.state.rings;
+					rings[event.target.name].color = event.target.value;
+					this.setState({rings: rings});
 					this.updateChart();
 				},
 
@@ -505,109 +537,105 @@ export function GraficaD3(base) {
 						/* jshint ignore:start */
 						<Grid>
 							<Row style={{marginLeft: "10px", marginRight: "10px"}}>
-								<Col xs={5} style={{paddingTop: "10px"}}>
+								<Col xs={this.state.editing ? 12 : 5} style={{paddingTop: "10px"}}>
 									<Row>
 										<Col xs={12}>
-											<h2>Orígen de los datos</h2>
+											<h2 style={{paddingLeft: '0px'}}>Orígen de los datos</h2>
 											<Form horizontal={true}>
 												<FormGroup>
-													<input type="radio" value="true" onChange={this.isFileChanged} checked={this.state.isFile} style={{float: 'left', marginRight: '4px'}} />
 													<FormControl type="file" onChange={this.fileChanged} />
-													<input type="radio" value="false" onChange={this.isFileChanged} checked={!this.state.isFile} style={{float: 'left', marginRight: '4px'}} /> Rellena una tabla
-													</FormGroup>
-													<Row>
-														{this.state.editing && !this.state.isFile &&
-															<div>
-																<Col componentClass={ControlLabel} xs={2}>
-																	{Dali.i18n.t("GraficaD3.data_cols")}
-																</Col>
-																<Col xs={3}>
-																	<FormControl type="number" name="cols" value={this.state.cols} onChange={this.colsChanged}/>
-																</Col>
-
-																<Col componentClass={ControlLabel} xs={1}>
-																	{Dali.i18n.t("GraficaD3.data_rows")}
-																</Col>
-																<Col xs={3}>
-																	<FormControl type="number" name="rows" value={this.state.rows} onChange={this.rowsChanged}/>
-																</Col>
-															</div>
-														}
-														{!this.state.isFile &&
-															<div>
-																<Col xs={3}>
-																	<Button onClick={context.editButtonClicked} style={{marginTop: '0px'}}>
-																		{this.state.editing ? 'Confirmar' : 'Editar'}
-																	</Button>
-																</Col>
-															</div>
-														}
-													</Row>
+												</FormGroup>
+												<FormGroup>
+													<Col componentClass={ControlLabel} xs={4}>
+														<FormControl.Static>
+															{'O Rellena una tabla'}
+														</FormControl.Static>
+													</Col>
+												</FormGroup>
+												<FormGroup>
 													{this.state.editing &&
-														<div style={{marginTop: '10px'}}>
-															<table className="table bordered hover" >
-																<thead>
-																	<tr>
-																		{Array.apply(0, Array(state.cols)).map(function (x, i) {
-																			return(
-																				<th key={i + 1}>
-																					<FormControl type="text" name={i} value={state.keys[i]} style={{margin: '0px'}} onChange={context.keyChanged}/>
-																				</th>
-																			);
-																		})}
-																	</tr>
-																</thead>
-																<tbody>
+														<div>
+															<Col componentClass={ControlLabel} xs={2}>
+																{Dali.i18n.t("GraficaD3.data_cols")}
+															</Col>
+															<Col xs={3}>
+																<FormControl type="number" name="cols" value={this.state.cols} onChange={this.colsChanged}/>
+															</Col>
 
-																	{Array.apply(0, Array(state.rows)).map(function (x, i) {
-
-																		return(
-																			<tr key={i + 1}>
-
-																				{Array.apply(0, Array(state.cols)).map(function (x, o) {
-																					return(
-																						<td key={o + 1}>
-																							<FormControl type="text" name={i + " " + state.keys[o]} value={state.data[i][state.keys[o]]} onChange={context.dataChanged}/>
-
-																						</td>
-																					);
-																				})}
-																			</tr>
-																		);
-																	})}
-																</tbody>
-															</table>
+															<Col componentClass={ControlLabel} xs={1}>
+																{Dali.i18n.t("GraficaD3.data_rows")}
+															</Col>
+															<Col xs={3}>
+																<FormControl type="number" name="rows" value={this.state.rows} onChange={this.rowsChanged}/>
+															</Col>
 														</div>
 													}
-												</Form>
-											</Col>
-											{this.state.phase > 1 &&
-												<Col xs={12}>
-													<h2>Opciones del gráfico</h2>
-													<Form horizontal={true}>
-														<FormGroup>
-															<Col componentClass={ControlLabel} xs={4}>
-																{Dali.i18n.t("GraficaD3.chart_type")}
-															</Col>
-															<Col xs={6} xsOffset={2}>
-																<FormControl componentClass="select" placeholder="select" onChange={this.typeChanged}>
-																	<option value="line">Línea</option>
-																	<option value="area">Área</option>
-																	<option value="bar">Barras</option>
-																	<option value="pie">Tarta</option>
-																</FormControl>
-															</Col>
-														</FormGroup>
-														<FormGroup>
-															<Col componentClass={ControlLabel} xs={4}>
-																{"Color"}
-															</Col>
-															<Col xs={6} xsOffset={2}>
-																<FormControl type="color" name="color" value={this.state.lineColor} onChange={this.colorChanged}/>
-															</Col>
-														</FormGroup>
-													</Form>
+													<Col xs={3}>
+														<Button onClick={context.editButtonClicked} style={{marginTop: '0px'}}>
+															{this.state.editing ? 'Confirmar' : 'Editar'}
+														</Button>
+													</Col>
+												</FormGroup>
+												{this.state.editing &&
+													<div style={{marginTop: '10px'}}>
+														<table className="table bordered hover" >
+															<thead>
+																<tr>
+																	{Array.apply(0, Array(state.cols)).map(function (x, i) {
+																		return(
+																			<th key={i + 1}>
+																				<FormControl type="text" name={i} value={state.keys[i]} style={{margin: '0px'}} onChange={context.keyChanged}/>
+																			</th>
+																		);
+																	})}
+																</tr>
+															</thead>
+															<tbody>
 
+																{Array.apply(0, Array(state.rows)).map(function (x, i) {
+
+																	return(
+																		<tr key={i + 1}>
+
+																			{Array.apply(0, Array(state.cols)).map(function (x, o) {
+																				return(
+																					<td key={o + 1}>
+																						<FormControl type="text" name={i + " " + state.keys[o]} value={state.data[i][state.keys[o]]} onChange={context.dataChanged}/>
+
+																					</td>
+																				);
+																			})}
+																		</tr>
+																	);
+																})}
+															</tbody>
+														</table>
+													</div>
+												}
+											</Form>
+										</Col>
+										{!this.state.editing &&
+											<Col xs={12}>
+												<h2>Opciones del gráfico</h2>
+
+												<Form horizontal={true}>
+													<FormGroup>
+														<Col componentClass={ControlLabel} xs={4}>
+															<FormControl.Static>
+																{Dali.i18n.t("GraficaD3.chart_type")}
+															</FormControl.Static>
+														</Col>
+														<Col xs={6} xsOffset={2}>
+															<FormControl componentClass="select" placeholder="line" onChange={this.typeChanged}>
+																<option value="line">Línea</option>
+																<option value="area">Área</option>
+																<option value="bar">Barras</option>
+																<option value="pie">Tarta</option>
+															</FormControl>
+														</Col>
+													</FormGroup>
+												</Form>
+												{this.state.type !== 'pie' &&
 													<Form horizontal={true}>
 														<FormGroup>
 															<Col componentClass={ControlLabel} xs={4}>
@@ -616,7 +644,7 @@ export function GraficaD3(base) {
 																</FormControl.Static>
 															</Col>
 															<Col xs={8}>
-																<FormControl componentClass="select" placeholder="select" value={state.x} onChange={this.xKeyChanged}>
+																<FormControl componentClass="select" placeholder={state.keys[0]} value={state.x} onChange={this.xKeyChanged}>
 																	{state.keys.map(function (x, i) {
 																		return(
 																			<option key={i + 1} value={x}>{x}</option>
@@ -640,14 +668,22 @@ export function GraficaD3(base) {
 														{state.y.map(function (y, i) {
 															return(
 																<div key={i + 1}>
-
+																	<FormGroup>
+																		<Col componentClass={ControlLabel} xs={3}>
+																			<FormControl.Static style={{float: 'left'}}>
+																				{'Eje ' + i}
+																			</FormControl.Static>
+																		</Col>
+																	</FormGroup>
 																	<FormGroup>
 																		<Col componentClass={ControlLabel} xs={4}>
-																			{'Eje ' + i}
+																			<FormControl.Static>
+																				{'Clave '}
+																			</FormControl.Static>
 																		</Col>
 																		<Col xs={7} xsOffset={1}>
-																			<FormControl componentClass="select" placeholder="select" name={i} value={y} onChange={context.yKeyChanged}>
-																				{state.keys.map(function (x, i) {
+																			<FormControl componentClass="select" placeholder={state.valueKeys[0]} name={i} value={y.key} onChange={context.yKeyChanged}>
+																				{state.valueKeys.map(function (x, i) {
 																					return(
 																						<option key={i + 1} value={x}>{x}</option>
 																					);
@@ -655,64 +691,145 @@ export function GraficaD3(base) {
 																			</FormControl>
 																		</Col>
 																	</FormGroup>
+																	<FormGroup>
+																		<Col componentClass={ControlLabel} xs={4}>
+																			<FormControl.Static>
+																				{"Color"}
+																			</FormControl.Static>
+																		</Col>
+																		<Col xs={6} xsOffset={2}>
+																			<FormControl type="color" name={i} value={y.color} onChange={context.colorChanged}/>
+																		</Col>
+																	</FormGroup>
 																</div>
 															);
 														})}
 														<FormGroup>
 															<Col componentClass={ControlLabel} xs={4}>
-																{'Ver rejilla'}
+																<FormControl.Static>
+																	{'Ver rejilla'}
+																</FormControl.Static>
 															</Col>
 															<Col xs={4}>
 																<Checkbox checked={state.gridX} onChange={this.xGridChanged}></Checkbox>
-																{'Vertical'}
+																{'Horizontal'}
 															</Col>
 															<Col xs={4}>
 																<Checkbox checked={state.gridY} onChange={context.yGridChanged}></Checkbox>
-																{'Horizontal'}
+																{'Vertical'}
 															</Col>
 														</FormGroup>
 													</Form>
-												</Col>
-											}
-										</Row>
-									</Col>
-									<div className="col-xs-7" ref="chartContainer" style={{padding: '0px'}}>
-										{this.state.phase > 1 &&
-											<Chart state={state} key={this.state.key}></Chart>
+												}
+												{this.state.type === 'pie' &&
+													<Form horizontal={true}>
+														<FormGroup>
+															<Col componentClass={ControlLabel} xs={4}>
+																<FormControl.Static>
+																	{'Anillos'}
+																</FormControl.Static>
+															</Col>
+															<Col xs={8}>
+																<FormControl type="number" value={context.state.rings.length} onChange={context.ringsNumberChanged}/>
+															</Col>
+
+														</FormGroup>
+
+														{state.rings.map(function (ring, i) {
+															return(
+																<div key={i + 1}>
+																	<FormGroup>
+																		<Col componentClass={ControlLabel} xs={3}>
+																			<FormControl.Static>
+																				{'Anillo ' + i}
+																			</FormControl.Static>
+																		</Col>
+																	</FormGroup>
+
+																	<FormGroup>
+																		<Col componentClass={ControlLabel} xs={4} xsOffset={3}>
+																			{'Nombre'}
+																		</Col>
+																		<Col xs={5}>
+																			<FormControl componentClass="select" placeholder="select" name={i} value={ring.name} onChange={context.ringNameChanged}>
+																				{state.keys.map(function (key, i) {
+																					return(
+																						<option key={i + 1} value={key}>{key}</option>
+																					);
+																				})}
+																			</FormControl>
+																		</Col>
+																	</FormGroup>
+																	<FormGroup>
+																		<Col componentClass={ControlLabel} xs={4} xsOffset={3}>
+																			{'Valor'}
+																		</Col>
+																		<Col xs={5}>
+																			<FormControl componentClass="select" placeholder={state.valueKeys[0]} name={i} value={ring.value} onChange={context.ringValueChanged}>
+																				{state.valueKeys.map(function (key, i) {
+																					return(
+																						<option key={i + 1} value={key}>{key}</option>
+																					);
+																				})}
+																			</FormControl>
+																		</Col>
+																	</FormGroup>
+																	<FormGroup>
+																		<Col componentClass={ControlLabel} xs={4} xsOffset={3}>
+																			{"Color"}
+																		</Col>
+																		<Col xs={5}>
+																			<FormControl type="color" name={i} value={ring.color} onChange={context.ringColorChanged}/>
+																		</Col>
+																	</FormGroup>
+																</div>
+															);
+														})}
+													</Form>
+												}
+											</Col>
+										}
+									</Row>
+								</Col>
+								<div className="col-xs-7 col-xs-offset-5" ref="chartContainer" style={{padding: '0px', zIndex: '10', position: 'fixed'}}>
+									<div style={{marginLeft: '-25px'}}>
+										{!this.state.editing &&
+											<Chart state={state} key={this.state.key} ></Chart>
 										}
 									</div>
-								</Row>
+								</div>
+							</Row>
 
-							</Grid>
+						</Grid>
 
 
-							/* jshint ignore:end */
-						);
-					}
-				});
+						/* jshint ignore:end */
+					);
+				}
+			});
 
-				return (
-					/* jshint ignore:start */
-					<Config></Config>
-					/* jshint ignore:end */
-				);
-			},
-			fileChanged: function (event) {
+			return (
+				/* jshint ignore:start */
+				<Config></Config>
+				/* jshint ignore:end */
+			);
+		},
+		fileChanged: function (event) {
 
-				var files = event.target.files;
-				var file = files[0];
-				var reader = new FileReader();
-				reader.onload = function() {
-					base.setState( "chartData", JSON.parse(this.result) );
-				};
-				reader.readAsText(file);
-			},
-			chartTypeChange: function (elements) {
-				base.setState( "chartType", elements[0].id );
-			},
-			handleToolbar: function (name, value) {
-				base.setState(name, value);
-			}
+			var files = event.target.files;
+			var file = files[0];
+			var reader = new FileReader();
+			reader.onload = function() {
+				base.setState( "chartData", JSON.parse(this.result) );
+			};
+			reader.readAsText(file);
+		},
+		chartTypeChange: function (elements) {
+			base.setState( "chartType", elements[0].id );
+		},
+		handleToolbar: function (name, value) {
+			base.setState(name, value);
+		}
 
-		};
-	}
+	};
+}
