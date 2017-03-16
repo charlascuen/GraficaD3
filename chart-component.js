@@ -14,18 +14,20 @@ let Chart = React.createClass({
 
 	render: function() {
 		/* jshint ignore:start */
-		let state = this.props.state;
-		console.log(state);
-		switch (state.type) {
+		let data = this.props.data;
+		let options = this.props.options;
+		let width = this.props.width;
+		console.log(width);
+		switch (options.type) {
 			case "line":
 			return (
 				<LineChart
-					width={state.chartWidth || 700 || 700} height={300}
-					data={state.data}>
-					<XAxis dataKey={state.x} name={state.x}/>
+					width={width || 700} height={300}
+					data={data}>
+					<XAxis dataKey={options.x} name={options.x}/>
 					<YAxis/>
-					<CartesianGrid horizontal={state.gridX} vertical={state.gridY} />
-					{state.y.map(function (y, o) {
+					<CartesianGrid horizontal={options.gridX} vertical={options.gridY} />
+					{options.y.map((y, o) => {
 						return(
 							<Line key={o + 1} type="monotone" dataKey={y.key} stroke={y.color}/>
 						);
@@ -36,10 +38,10 @@ let Chart = React.createClass({
 			);
 			case "area":
 			return (
-				<AreaChart width={state.chartWidth || 700} height={300}
-					data={state.data}>
+				<AreaChart width={width || 700} height={300}
+					data={data}>
 					<defs>
-						{state.y.map(function (y, o) {
+						{options.y.map((y, o) => {
 							return(
 
 								<linearGradient id={"colorUv" + o} x1="0" y1="0" x2="0" y2="1">
@@ -49,11 +51,11 @@ let Chart = React.createClass({
 							);
 						})}
 					</defs>
-					<XAxis dataKey={state.x} name={state.x}/>
+					<XAxis dataKey={options.x} name={options.x}/>
 					<YAxis/>
-					<CartesianGrid horizontal={state.gridX} vertical={state.gridY} />
+					<CartesianGrid horizontal={options.gridX} vertical={options.gridY} />
 					<Tooltip />
-					{state.y.map(function (y, o) {
+					{options.y.map((y, o) => {
 						return(
 							<Area key={o + 1} type="monotone" dataKey={y.key} stroke={y.color} fillOpacity={1} fill={"url(#colorUv" + o + ")"}/>
 						);
@@ -62,26 +64,26 @@ let Chart = React.createClass({
 			);
 			case "bar":
 			return (
-				<BarChart width={state.chartWidth || 700} height={300}
-					data={state.data}>
-					<XAxis dataKey={state.x} name={state.x}/>
+				<BarChart width={width || 700} height={300}
+					data={data}>
+					<XAxis dataKey={options.x} name={options.x}/>
 					<YAxis/>
-					<CartesianGrid horizontal={state.gridX} vertical={state.gridY} />
+					<CartesianGrid horizontal={options.gridX} vertical={options.gridY} />
 					<Tooltip/>
 					<Legend />
-					{state.y.map(function (y, o) {
+					{options.y.map((y, o) => {
 						return(
-							<Bar key={o + 1} dataKey={y.color} fill={y.color} scaleY={1} />
+							<Bar key={o + 1} dataKey={y.key} fill={y.color} scaleY={1} />
 						);
 					})}
 				</BarChart>
 			);
 			case "pie":
 			let rings = [];
-			for (let ring of state.rings) {
+			for (let ring of options.rings) {
 				let newRing = {};
 				let data = [];
-				for (let row of state.data) {
+				for (let row of data) {
 					let value = {};
 					value.name = row[ring.name];
 					value.value = row[ring.value];
@@ -93,9 +95,9 @@ let Chart = React.createClass({
 			}
 
 			return (
-				<PieChart width={state.chartWidth || 700} height={300}>
+				<PieChart width={width || 700} height={300}>
 					<Tooltip/>
-					{rings.map(function (ring, o) {
+					{rings.map((ring, o) => {
 						return(
 							<Pie key={o + 1} data={ring.data} cx="50%" cy="50%" innerRadius={o*50} outerRadius={(o + 1)*50 - 10} fill={ring.color} label/>
 						);
@@ -105,14 +107,14 @@ let Chart = React.createClass({
 			default:
 			return (
 				<LineChart
-					width={state.chartWidth || 700} height={300}
-					data={state.data}>
-					<XAxis dataKey={state.x} name={state.x}/>
+					width={width || 700} height={300}
+					data={data}>
+					<XAxis dataKey={options.x} name={options.x}/>
 					<YAxis/>
 					<CartesianGrid
 						horizontal={true}
-						vertical={state.xGrid} />
-					{state.y.map(function (y, o) {
+						vertical={options.xGrid} />
+					{options.y.map((y, o) => {
 						return(
 							<Line key={o + 1} type="monotone"
 								dataKey={y.key}
