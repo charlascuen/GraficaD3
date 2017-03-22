@@ -5,12 +5,12 @@ let Chart = require("./chart-component");
 
 let DataProvider = React.createClass({
 	getInitialState() {
-
-		console.log('data');
-		console.log(this.props.data);
 		let rows = this.props.data.length;
 		let cols = this.props.data.length === 0 ? 2 : Object.keys(this.props.data[0]).length;
-
+		console.log(cols);
+		console.log(this.props.data);
+		console.log(this.props.keys);
+		console.log(this.props.valueKeys);
 		return {
 			cols: cols,
 			rows: rows,
@@ -147,7 +147,7 @@ let DataProvider = React.createClass({
 	fileChanged(event){
 		var files = event.target.files;
 		var file = files[0];
-		console.log(file);
+
 		var reader = new FileReader();
 		reader.onload = () => {
 			let data = reader.result;
@@ -162,7 +162,7 @@ let DataProvider = React.createClass({
 	},
 
 	dataChanged(event) {
-		console.log(event.target.name);
+
 		let pos = event.target.name.split(" ");
 		let row = pos[0];
 		let col = pos[1];
@@ -258,35 +258,38 @@ let DataProvider = React.createClass({
 
 let ChartOptions = React.createClass({
 	getInitialState() {
+
 		let options = this.props.options;
 		options.keys = this.props.keys;
 		options.valueKeys = this.props.valueKeys;
+		console.log(options);
 		return options;
 	},
 
-	optionsUpdate() {
-		if (typeof this.props.optionsChanged === 'function') {
-			this.props.optionsChanged({
-				type: this.state.type,
-				x: this.state.x,
-				y: this.state.y,
-				gridX: this.state.gridX,
-				gridY: this.state.gridY,
-				rings: this.state.rings,
-			});
+	componentDidUpdate(prevProps, prevState) {
+		if(prevState != this.state){
+			if (typeof this.props.optionsChanged === 'function') {
+				console.log(this.state);
+				this.props.optionsChanged({
+					type: this.state.type,
+					x: this.state.x,
+					y: this.state.y,
+					gridX: this.state.gridX,
+					gridY: this.state.gridY,
+					rings: this.state.rings,
+				});
+			}
 		}
 	},
 
 	typeChanged(event){
 		this.setState({type: event.target.value});
-		this.optionsUpdate();
 	},
 
 	colorChanged(event){
 		let y = this.state.y;
 		y[event.target.name].color = event.target.value;
 		this.setState({y: y});
-		this.optionsUpdate();
 	},
 
 	yAxisChanged(event){
@@ -296,36 +299,31 @@ let ChartOptions = React.createClass({
 			for (var i = yAxis.length; i < number; i++) {
 				yAxis[i] = {
 					key: "",
-					color: this.state.extState.chartLineColor
+					color: "#ff7f0e"
 				};
 			}
 		} else {
 			yAxis = yAxis.slice(0, number);
 		}
 		this.setState({y: yAxis});
-		this.optionsUpdate();
 	},
 
 	xKeyChanged(event){
 		this.setState({x: event.target.value});
-		this.optionsUpdate();
 	},
 
 	xGridChanged(event){
 		this.setState({gridX: event.target.checked});
-		this.optionsUpdate();
 	},
 
 	yKeyChanged(event){
 		let y = this.state.y;
 		y[event.target.name].key = event.target.value;
 		this.setState({y: y});
-		this.optionsUpdate();
 	},
 
 	yGridChanged(event){
 		this.setState({gridY: event.target.checked});
-		this.optionsUpdate();
 	},
 
 	ringsNumberChanged(event){
@@ -336,35 +334,31 @@ let ChartOptions = React.createClass({
 				rings[i] = {
 					name: this.state.keys[0],
 					value: this.state.valueKeys[0],
-					color: this.state.extState.chartLineColor
+					color: "#ff7f0e"
 				};
 			}
 		} else {
 			rings = rings.slice(0, number);
 		}
 		this.setState({rings: rings});
-		this.optionsUpdate();
 	},
 
 	ringNameChanged(event){
 		let rings = this.state.rings;
 		rings[event.target.name].name = event.target.value;
 		this.setState({rings: rings});
-		this.optionsUpdate();
 	},
 
 	ringValueChanged(event){
 		let rings = this.state.rings;
 		rings[event.target.name].value = event.target.value;
 		this.setState({rings: rings});
-		this.optionsUpdate();
 	},
 
 	ringColorChanged(event){
 		let rings = this.state.rings;
 		rings[event.target.name].color = event.target.value;
 		this.setState({rings: rings});
-		this.optionsUpdate();
 	},
 
 	render: function() {
@@ -381,7 +375,7 @@ let ChartOptions = React.createClass({
 							</FormControl.Static>
 						</Col>
 						<Col xs={6} xsOffset={2}>
-							<FormControl componentClass="select" placeholder="line" onChange={this.typeChanged}>
+							<FormControl componentClass="select" placeholder="line" value={this.state.type} onChange={this.typeChanged}>
 								<option value="line">Línea</option>
 								<option value="area">Área</option>
 								<option value="bar">Barras</option>
@@ -555,60 +549,30 @@ let Config = React.createClass({
 	},
 	getInitialState() {
 
-		let base = this.props.base;
-
-		let data = [];
-		let keys = [];
-		let row = {};
-		for (let i = 0; i < 2; i++) {
-			keys.push(i);
-			row[i] = "";
-		}
-		for (var i = 0; i < 1; i++) {
-			data.push(row);
-		}
-
-		return {
-			base: base,
-			editing: true,
-			data: data,
-			keys: keys,
-			valueKeys: keys,
-			options: {
-				type: "line",
-				x: "",
-				y: [{
-					key: "",
-					color: "#ff7f0e"
-				}],
-				gridX: true,
-				gridY: true,
-				rings: [{
-					name: "",
-					value: "",
-					color: "#ff7f0e"
-				}]
-			}
-		};
+		let state = this.props.state;
+		state.base = this.props.base;
+		return state;
 	},
 
 	modifyState(){
+		console.log("modifyState");
+		console.log(this.state);
 		this.state.base.setState("options", this.state.options);
 		this.state.base.setState("data", this.state.data);
+		this.state.base.setState("keys", this.state.keys);
+		this.state.base.setState("valueKeys", this.state.valueKeys);
+		this.state.base.setState("editing", this.state.editing);
 	},
 
 	dataChanged(values) {
-		this.state.editing = false;
-		this.state.data = values.data;
-		this.state.keys = values.keys;
+
+		this.setState({editing: false});
 		this.state.base.setState("data", values.data);
-		this.setOptions();
+		this.setOptions(values.data, values.keys);
 		this.updateChart();
 	},
 
-	setOptions() {
-		let data = this.state.data;
-		let keys = this.state.keys;
+	setOptions(data, keys) {
 		let nKeys = [];
 		for (let i = 0; i < keys.length; i++) {
 			let value = keys[i];
@@ -623,7 +587,7 @@ let Config = React.createClass({
 				let key = nKeys[i];
 				data[o][keys[i]] = isNaN(data[o][keys[i]]) || typeof(data[o][keys[i]]) === "boolean"  || data[o][keys[i]] === "" || data[o][keys[i]] === null ? data[o][keys[i]] : parseInt(data[o][keys[i]]);
 				if(key.notNumber){
-					nKeys[i].notNumber = isNaN(row[key.value]) || typeof(row[key.value]) === "boolean";
+					nKeys[i].notNumber = isNaN(row[key.value]) || typeof(row[key.value]) === "boolean" || row[key.value] === "";
 				}
 			}
 		}
@@ -634,16 +598,23 @@ let Config = React.createClass({
 				valueKeys.push(key.value);
 			}
 		}
-		this.setState({options:{valueKeys: valueKeys, y: [{key: valueKeys[0], color: "#ff7f0e"}], rings: [{name: keys[0], value: valueKeys[0], color: "#ff7f0e"}]}});
+		let options = this.state.options;
+		options.y = [{key: valueKeys[0], color: "#ff7f0e"}];
+		options.rings = [{name: keys[0], value: valueKeys[0], color: "#ff7f0e"}];
+		this.setState({data: data, keys: keys, valueKeys: valueKeys, options: options});
 	},
 
 	optionsChanged(options) {
-		this.state.options = options;
+		console.log("optionshanged");
+		console.log(options);
+		this.setState({options: options});
 		this.state.base.setState("options", options);
 		this.updateChart();
 	},
 
 	editButtonClicked() {
+		console.log("editButton");
+		console.log(this.state);
 		this.setState({editing: true});
 	},
 
@@ -652,7 +623,7 @@ let Config = React.createClass({
 	},
 
 	render() {
-		console.log(this.state);
+
 		this.modifyState();
 		return (
 			/* jshint ignore:start */

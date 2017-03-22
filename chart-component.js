@@ -17,7 +17,9 @@ let Chart = React.createClass({
 		let data = this.props.data;
 		let options = this.props.options;
 		let width = this.props.width;
-		console.log(width);
+		console.log("props");
+		console.log(this.props);
+		console.log(options.type);
 		switch (options.type) {
 			case "line":
 			return (
@@ -44,7 +46,7 @@ let Chart = React.createClass({
 						{options.y.map((y, o) => {
 							return(
 
-								<linearGradient id={"colorUv" + o} x1="0" y1="0" x2="0" y2="1">
+								<linearGradient key={o + 1} id={"colorUv" + o} x1="0" y1="0" x2="0" y2="1">
 									<stop offset="5%" stopColor={y.color} stopOpacity={0.8}/>
 									<stop offset="95%" stopColor={y.color} stopOpacity={0}/>
 								</linearGradient>
@@ -82,14 +84,14 @@ let Chart = React.createClass({
 			let rings = [];
 			for (let ring of options.rings) {
 				let newRing = {};
-				let data = [];
+				let newData = [];
 				for (let row of data) {
 					let value = {};
 					value.name = row[ring.name];
 					value.value = row[ring.value];
-					data.push(value);
+					newData.push(value);
 				}
-				newRing.data = data;
+				newRing.data = newData;
 				newRing.color = ring.color;
 				rings.push(newRing);
 			}
@@ -105,6 +107,7 @@ let Chart = React.createClass({
 				</PieChart>
 			);
 			default:
+			console.log("default");
 			return (
 				<LineChart
 					width={width || 700} height={300}

@@ -156,20 +156,43 @@ export function GraficaD3(base) {
 			};
 		},
 		getInitialState: function () {
-			return {
-				chartTitle:		Dali.i18n.t("GraficaD3.title"),
-				showXGrid:		"checked",
-				showYGrid:		"checked",
-				chartMargins:	{left: 100, right: 100, top: 50, bottom: 50},
-				chartData:		{file: ""},
-				chartLineColor:	"#ff7f0e",
-				cols:			2,
-				rows:			1
+			let data = [];
+			let keys = [];
+			let row = {};
+			for (let i = 0; i < 1; i++) {
+				keys.push(i);
+				row[i] = "";
+			}
+			for (var i = 0; i < 2; i++) {
+				data.push(row);
+			}
 
+			return {
+				data: data,
+				keys: keys,
+				valueKeys: keys,
+				editing: true,
+				options: {
+					type: "line",
+					x: "",
+					y: [{
+						key: "",
+						color: "#ff7f0e"
+					}],
+					gridX: true,
+					gridY: true,
+					rings: [{
+						name: "",
+						value: "",
+						color: "#ff7f0e"
+					}]
+				}
 			};
 		},
 		getRenderTemplate: function (state) {
 
+			console.log("render");
+			console.log(state);
 			return (
 				/* jshint ignore:start */
 				<Chart data={state.data} options={state.options}></Chart>
