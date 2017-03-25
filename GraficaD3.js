@@ -4,6 +4,7 @@ import Typeahead from 'react-bootstrap-typeahead';
 
 let Chart = require("./chart-component");
 let Config = require("./config-component");
+require('./_graficaD3.scss');
 
 export function GraficaD3(base) {
 	return {

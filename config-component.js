@@ -175,11 +175,12 @@ let DataProvider = React.createClass({
 	render: function() {
 		return (
 			/* jshint ignore:start */
-			<Col xs={12}>
-				<h2 style={{paddingLeft: '0px'}}> Orígen de los datos </h2>
-				<Form horizontal={true}>
+			<div>
+				<Form horizontal={true} style={{padding: "16px"}}>
 					<FormGroup>
-						<FormControl type="file" onChange={this.fileChanged} />
+						<FormControl.Static>
+							<FormControl type="file" onChange={this.fileChanged} />
+						</FormControl.Static>
 					</FormGroup>
 					<FormGroup>
 						<Col componentClass={ControlLabel} xs={4}>
@@ -250,7 +251,7 @@ let DataProvider = React.createClass({
 						</table>
 					</div>
 				</Form>
-			</Col>
+			</div>
 			/* jshint ignore:end */
 		);
 	}
@@ -364,17 +365,17 @@ let ChartOptions = React.createClass({
 	render: function() {
 		return (
 			/* jshint ignore:start */
-			<Col xs={12}>
-				<h2>Opciones del gráfico</h2>
+			<div>
+				<h4 style={{color:'#F47920'}}>Opciones del gráfico</h4>
 
 				<Form horizontal={true}>
 					<FormGroup>
-						<Col componentClass={ControlLabel} xs={4}>
+						<Col xs={4}>
 							<FormControl.Static>
 								{Dali.i18n.t("GraficaD3.chart_type")}
 							</FormControl.Static>
 						</Col>
-						<Col xs={6} xsOffset={2}>
+						<Col xs={8}>
 							<FormControl componentClass="select" placeholder="line" value={this.state.type} onChange={this.typeChanged}>
 								<option value="line">Línea</option>
 								<option value="area">Área</option>
@@ -387,7 +388,7 @@ let ChartOptions = React.createClass({
 				{this.state.type !== 'pie' &&
 					<Form horizontal={true}>
 						<FormGroup>
-							<Col componentClass={ControlLabel} xs={4}>
+							<Col xs={4}>
 								<FormControl.Static>
 									{'Eje Horizontal'}
 								</FormControl.Static>
@@ -418,19 +419,19 @@ let ChartOptions = React.createClass({
 							return(
 								<div key={i + 1}>
 									<FormGroup>
-										<Col componentClass={ControlLabel} xs={3}>
+										<Col xs={4}>
 											<FormControl.Static style={{float: 'left'}}>
 												{'Eje ' + i}
 											</FormControl.Static>
 										</Col>
 									</FormGroup>
 									<FormGroup>
-										<Col componentClass={ControlLabel} xs={4}>
+										<Col xs={4}>
 											<FormControl.Static>
 												{'Clave '}
 											</FormControl.Static>
 										</Col>
-										<Col xs={7} xsOffset={1}>
+										<Col xs={6}>
 											<FormControl componentClass="select" placeholder={this.state.valueKeys[0]} name={i} value={y.key} onChange={this.yKeyChanged}>
 												{this.state.valueKeys.map((x, i) => {
 													return(
@@ -441,12 +442,12 @@ let ChartOptions = React.createClass({
 										</Col>
 									</FormGroup>
 									<FormGroup>
-										<Col componentClass={ControlLabel} xs={4}>
+										<Col xs={4}>
 											<FormControl.Static>
 												{"Color"}
 											</FormControl.Static>
 										</Col>
-										<Col xs={6} xsOffset={2}>
+										<Col xs={6}>
 											<FormControl type="color" name={i} value={y.color} onChange={this.colorChanged}/>
 										</Col>
 									</FormGroup>
@@ -535,8 +536,9 @@ let ChartOptions = React.createClass({
 							);
 						})}
 					</Form>
-				}
-			</Col>
+
+			}
+			</div>
 			/* jshint ignore:end */
 		);
 	}
@@ -629,20 +631,19 @@ let Config = React.createClass({
 			/* jshint ignore:start */
 			<Grid>
 				<Row style={{marginLeft: "10px", marginRight: "10px"}}>
-					<Col xs={this.state.editing ? 12 : 5} style={{paddingTop: "10px"}}>
-						<Row>
-							{!this.state.editing &&
-								<Button onClick={this.editButtonClicked} style={{marginTop: '0px'}}>Editar</Button>
-							}
-							{this.state.editing &&
-								<DataProvider data={this.state.data} dataChanged={this.dataChanged} keys={this.state.keys} valueKeys={this.state.valueKeys}></DataProvider>
-							}
-							{!this.state.editing &&
-								<ChartOptions options={this.state.options} optionsChanged={this.optionsChanged} keys={this.state.keys} valueKeys={this.state.valueKeys}></ChartOptions>
-							}
-						</Row>
+					<Col lg={this.state.editing ? 12 : 5} xs={12} style={{paddingTop: "10px"}}>
+						<h4 style={{paddingLeft: '0px', color:'#F47920'}}> Orígen de los datos </h4>
+						{!this.state.editing &&
+							<Button onClick={this.editButtonClicked} style={{marginTop: '0px'}}>Editar</Button>
+						}
+						{this.state.editing &&
+							<DataProvider data={this.state.data} dataChanged={this.dataChanged} keys={this.state.keys} valueKeys={this.state.valueKeys}></DataProvider>
+						}
+						{!this.state.editing &&
+							<ChartOptions options={this.state.options} optionsChanged={this.optionsChanged} keys={this.state.keys} valueKeys={this.state.valueKeys}></ChartOptions>
+						}
 					</Col>
-					<div className="col-xs-7 col-xs-offset-5" ref="chartContainer" style={{padding: '0px', zIndex: '10', position: 'fixed'}}>
+					<div className="col-xs-12 col-lg-7" ref="chartContainer" style={{padding: '0px'}}>
 						<div style={{marginLeft: '-25px'}}>
 							{!this.state.editing &&
 								<Chart data={this.state.data} options={this.state.options} width={this.state.chartWidth} key={this.state.key} ></Chart>
