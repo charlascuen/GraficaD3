@@ -13,11 +13,12 @@ export function GraficaD3(base) {
 				name: "GraficaD3",
 				flavor: "react",
 				displayName: Dali.i18n.t("GraficaD3.PluginName"),
-				category: "text",
+				category: "image",
 				needsConfigModal: true,
 				needsTextEdition: false,
-				icon: "format_color_text",
-				initialWidth: '700px'
+				icon: "insert_chart",
+				initialWidth: '700px',
+				initialHeight: "300px"
 			};
 		},
 		getToolbar: function () {

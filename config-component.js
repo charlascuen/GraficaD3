@@ -7,10 +7,6 @@ let DataProvider = React.createClass({
 	getInitialState() {
 		let rows = this.props.data.length;
 		let cols = this.props.data.length === 0 ? 2 : Object.keys(this.props.data[0]).length;
-		console.log(cols);
-		console.log(this.props.data);
-		console.log(this.props.keys);
-		console.log(this.props.valueKeys);
 		return {
 			cols: cols,
 			rows: rows,
@@ -167,9 +163,11 @@ let DataProvider = React.createClass({
 		let row = pos[0];
 		let col = pos[1];
 		let data = this.state.data;
-		data[row][col] = isNaN(event.target.value) || event.target.value === "" || event.target.value === null ? event.target.value : parseInt(event.target.value);
+		let newvalue = isNaN(event.target.value) || event.target.value === "" || event.target.value === null ?  event.target.value : parseInt(event.target.value);
+		let newRow = {};
+		newRow[col] = newvalue;
+		data[row] =  Object.assign({}, data[row], newRow);
 		this.setState({data: data});
-		this.validateData();
 	},
 
 	render: function() {
@@ -268,7 +266,7 @@ let ChartOptions = React.createClass({
 	},
 
 	componentDidUpdate(prevProps, prevState) {
-		if(prevState != this.state){
+		if(prevState !== this.state){
 			if (typeof this.props.optionsChanged === 'function') {
 				console.log(this.state);
 				this.props.optionsChanged({
@@ -644,7 +642,7 @@ let Config = React.createClass({
 						}
 					</Col>
 					<div className="col-xs-12 col-lg-7" ref="chartContainer" style={{padding: '0px'}}>
-						<div style={{marginLeft: '-25px'}}>
+						<div style={{marginLeft: '-25px', height: '300px'}}>
 							{!this.state.editing &&
 								<Chart data={this.state.data} options={this.state.options} width={this.state.chartWidth} key={this.state.key} ></Chart>
 							}
