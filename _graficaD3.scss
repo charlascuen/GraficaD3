@@ -1,5 +1,11 @@
+.modal-body{
+  padding: 24px;
+}
 .d3Options, .d3Axes{
     padding-left: 32px;
+}
+.form-group{
+  padding: 8px 0;
 }
 .form-group div p{
     font-weight: bold;
@@ -9,4 +15,11 @@
     position: fixed;
     right: 36px;
     z-index: 10px;
+}
+.form-horizontal .form-group{
+  margin: 0;
+  padding: 8px;
+}
+.form-horizontal .control-label{
+  text-align: left;
 }

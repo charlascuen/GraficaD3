@@ -174,7 +174,7 @@ let DataProvider = React.createClass({
 		return (
 			/* jshint ignore:start */
 			<div>
-				<Form horizontal={true} style={{padding: "16px"}}>
+				<Form horizontal={true}>
 					<FormGroup>
 						<FormControl.Static>
 							<FormControl type="file" onChange={this.fileChanged} />
@@ -368,7 +368,7 @@ let ChartOptions = React.createClass({
 
 				<Form horizontal={true}>
 					<FormGroup>
-						<Col xs={4}>
+						<Col componentClass={ControlLabel} xs={4}>
 							<FormControl.Static>
 								{Dali.i18n.t("GraficaD3.chart_type")}
 							</FormControl.Static>
@@ -386,7 +386,7 @@ let ChartOptions = React.createClass({
 				{this.state.type !== 'pie' &&
 					<Form horizontal={true}>
 						<FormGroup>
-							<Col xs={4}>
+							<Col componentClass={ControlLabel} xs={4}>
 								<FormControl.Static>
 									{'Eje Horizontal'}
 								</FormControl.Static>
@@ -402,7 +402,7 @@ let ChartOptions = React.createClass({
 							</Col>
 						</FormGroup>
 						<FormGroup>
-							<Col componentClass={ControlLabel} xs={4}>
+							<Col xs={4}>
 								<FormControl.Static>
 									{'Ejes Verticales'}
 								</FormControl.Static>
@@ -627,9 +627,8 @@ let Config = React.createClass({
 		this.modifyState();
 		return (
 			/* jshint ignore:start */
-			<Grid>
-				<Row style={{marginLeft: "10px", marginRight: "10px"}}>
-					<Col lg={this.state.editing ? 12 : 5} xs={12} style={{paddingTop: "10px"}}>
+				<div>
+					<Col lg={this.state.editing ? 12 : 5} xs={12}>
 						<h4 style={{paddingLeft: '0px', color:'#F47920'}}> Orígen de los datos </h4>
 						{!this.state.editing &&
 							<Button onClick={this.editButtonClicked} style={{marginTop: '0px'}}>Editar</Button>
@@ -648,11 +647,7 @@ let Config = React.createClass({
 							}
 						</div>
 					</div>
-				</Row>
-
-			</Grid>
-
-
+				</div>
 			/* jshint ignore:end */
 		);
 	}
